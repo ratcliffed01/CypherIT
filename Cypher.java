@@ -37,7 +37,7 @@ public class Cypher
 
 	//===================================================================================
 	public void debug(String msg){
-		System.out.println(msg);
+		//System.out.println(msg);
 	}
     	//===================================================================================
 	// read txt files from local folder and load into 2darray
@@ -56,12 +56,12 @@ public class Cypher
 		}
 		catch (IOException ioe)
 		{
-        	    	System.out.println("reading file IOException - "+ioe.getMessage());
+        	    	debug("reading file IOException - "+ioe.getMessage());
 	    		return null;
 		}
 		catch (Exception e)
 		{
-            		System.out.println("reading files Exception - "+e.getMessage());
+            		debug("reading files Exception - "+e.getMessage());
 	    		return null;
 		}
     	}
@@ -90,7 +90,7 @@ public class Cypher
 				ntxt = "";
 			}
 		}catch (Exception ex){
-			System.out.println("Excep - i="+i+" j="+j+" pos="+pos+" 1char="+oneChar+" "+ntxt+" "+ex.getMessage());
+			debug("Excep - i="+i+" j="+j+" pos="+pos+" 1char="+oneChar+" "+ntxt+" "+ex.getMessage());
 			return "";
 		}
 		return txt;
@@ -119,7 +119,7 @@ public class Cypher
 				ntxt = "";
 			}
 		}catch (Exception ex){
-			System.out.println("Excep - i="+i+" j="+j+" pos="+pos+" 1char="+oneChar+" "+ntxt+" "+ex.getMessage());
+			debug("Excep - i="+i+" j="+j+" pos="+pos+" 1char="+oneChar+" "+ntxt+" "+ex.getMessage());
 			return "";
 		}
 		return txt;
@@ -135,28 +135,34 @@ public class Cypher
 		return valid;
 	}
     	//===================================================================================
-    	static public void main(String[] args)
+    	public String CypherMain(String CorD, String fn, String key)
     	{
-		String CorD = args[0];
-		String fn = args[1];
-		String key = args[2];
 		String resultstr = "";
 		Cypher cy = new Cypher();
 		if (cy.validateArgs(CorD, fn, key)){
 			String xx = cy.readFile(fn);
 			if (xx != null){
-				System.out.println("Processing "+fn);
+				debug("Processing "+fn);
 				if (CorD.equals("C")){ 
 					resultstr = cy.encrypt(xx,key);
-					System.out.println("new cyphered txt="+resultstr);
 				}
 				if (CorD.equals("D")){ 
 					resultstr = cy.decypher(xx,key);
-					System.out.println("new decyphered txt="+resultstr);
 				}
 			}
 		}else{
-			System.out.println("Invalid arguments - <'C' or 'D'> <filename> <numeric key>");
+			resultstr = "Invalid arguments - <'C' or 'D'> <filename> <numeric key>";
 		}
+		return resultstr;
+	}
+    	//===================================================================================
+    	static public void main(String[] args)
+    	{
+		String CorD = args[0];
+		String fn = args[1];
+		String key = args[2];
+		Cypher cy = new Cypher();
+		String resultstr = cy.CypherMain(CorD, fn, key);
+		System.out.println(resultstr);
 	}
 }
