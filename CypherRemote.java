@@ -1,18 +1,25 @@
-// to compile do from folder above - C:\projects\Cypher>javac -cp ../ Cypher100.java
-// to cypher from same folder  -   C:\projects\Cypher>java  -cp ../ Cypher.Cypher100 C example2.txt 1234-abcd-5678-efgh>x.x
-// to decypher from same folder  - C:\projects\Cypher>java -cp ../ Cypher.Cypher100  D x.x 1234-abcd-5678-efgh
+// to compile do from folder above - C:\projects\Cypher>javac -cp ../ CypherRemote.java
+// to cypher from same folder  -   C:\projects\Cypher>java -cp ../ Cypher.CypherRemote C example2.txt 1234-abcd-5678-efgh <cypherfile>>x.x
+// to decypher from same folder  - C:\projects\Cypher>java -cp ../ Cypher.CypherRemote  D x.x 1234-abcd-5678-efgh <cypherfile>
 
 //===============================================================================================================
-//	Cypher100.java		Authour David Ratcliffe		Version: v1.0
+//	CypherRemote.java		Authour David Ratcliffe		Version: v1.0
 //
 //	This program is designed to convert a plain text message from a text file to cypherable text or vice versa.
 //	The cypher array is arrayed 100 times with the key can be alpha/nmeric in this programs,
-//	to execute do as follows :	java -cp ../ Cypher.Cypher100 C example2.txt 1234-abcd-5678-efgh>x.x
-//					java -cp ../ Cypher.Cypher100  D x.x 1234-abcd-5678-efgh
+//	to execute do as follows :	java -cp ../ Cypher.CypherRemote C example2.txt 1234-abcd-5678-efgh CypherArrray_v1_0_10000.txt>x.x
+//					java -cp ../ Cypher.CypherRemote D x.x 1234-abcd-5678-efgh CypherArrray_v1_0_10000.txt
 //
 //	parameter 1 - can be C or D; if C then converts normal text to cyphred text, if D converts cyphered text to normal text
 //	parameter 2 - filename of file containing text to be translated, can include path if required
 //	parameter 3 - alpha/numeric string can be any length, the longer the slower
+//	parameter 4 - cypherarray file name used to cypher/decyphrt, file is loaded into cypherarray. can be any size
+//
+//	The cypher array is now read from a file (p4) and can be any size up to the memory allowance
+//	The basestr is now taken from the 1st element in the cypher array
+//	The keystr is now taken from the last element in the cypher array
+//	With the keystr is a factor whish is based on the size of the array ie if array is 100 then factor is 1
+//	if 10 then fact is 0.1, if 1000 yhen 10. This allows the whole cypher array to be used.
 
 package Cypher;
 
@@ -21,14 +28,15 @@ import java.net.*;
 import java.util.*;
 import java.text.*;
 import java.sql.Timestamp;
+import java.math.*;
 
 public class CypherRemote
 {
 				//	 012345678901234567890123456789012345678901234567890123456789012345678901234567890123
-	private String keyStr = 	"FX-;4$zusTr!.x2ytV?{£)g_HnWBNC]Z,R hLafQI6wS[PG=YoDlkAc*emq7+509KiOjdEv%(UM:8}p1Jb#3";
-	private String baseStr = 	"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ,.:;?[]-+=_{}#£$%!()*";
+	private String keyStr = 	"";
+	private String baseStr = 	"";
 
-	List<String> mess = new ArrayList<String>();
+	private List<String> mess = new ArrayList<String>();
 
 	//===================================================================================
 	public void debug(String msg){
@@ -51,7 +59,7 @@ public class CypherRemote
 			while ((xx=cp.readLine())!=null) txt += xx + "<CRLF>";
 			cp.close();
 
-			return txt;
+			return txt.substring(0,txt.length() - 6);	//remove last crlf
 		}
 		catch (IOException ioe)
 		{
@@ -120,8 +128,10 @@ public class CypherRemote
     	}
 
 	//===================================================================================
-	public int getKeyNum(String key){
-		return (keyStr.indexOf(key));
+	public int getKeyNum(String key,float factor){
+		int num = (int)Math.floor(this.keyStr.indexOf(key)*factor);
+		//debug1("gn - n="+num+" f="+factor+" k="+keyStr.indexOf(key));
+		return num;
 	}
 	//===================================================================================
 	public String encrypt(String txt, String key, String[] cypherArray){
@@ -131,12 +141,13 @@ public class CypherRemote
 		int i = 0;
 		int j = 0;
 		int pos = 0;
+		float factor = (float)cypherArray.length / 100.0f;
 
 		try
 		{
 			debug("txtl="+txt.length()+" key="+key);
 			for (int k = 0; k < key.length(); k++){
-				j = getKeyNum(key.substring(k,k+1));
+				j = getKeyNum(key.substring(k,k+1),factor);
 				if (j < 0) throw new Exception("key character not valid - "+key);
 				for (i = 0; i < txt.length(); i++){
 					oneChar = txt.substring(i,i+1);
@@ -162,11 +173,13 @@ public class CypherRemote
 		int i = 0;
 		int j = 0;
 		int pos = 0;
+		float factor = cypherArray.length / 100;
+
 		try
 		{
 			debug("txtl="+txt.length());
 			for (int k = key.length() - 1; k > -1 ; k--){
-				j = getKeyNum(key.substring(k,k+1));
+				j = getKeyNum(key.substring(k,k+1),factor);
 				if (j < 0) throw new Exception("key character not valid - "+key);
 				for (i = 0; i < txt.length(); i++){
 					oneChar = txt.substring(i,i+1);
@@ -192,7 +205,7 @@ public class CypherRemote
 		if (fn.indexOf(".") == -1) return false; 
 		if (cfn.indexOf(".") == -1) return false; 
 		for (int k = key.length() - 1; k > -1 ; k--){
-			if (getKeyNum(key.substring(k,k+1)) < 0){
+			if (getKeyNum(key.substring(k,k+1),1) < 0){
 				valid = false;
 				break;
 			}
@@ -204,12 +217,15 @@ public class CypherRemote
     	{
 		String resultstr = "";
 		CypherRemote cy = new CypherRemote();
+		String[] cypherArray = cy.readFileCypher(cfn);
+		if (cypherArray == null) throw new Exception("Imported cypherArray less than keystr");
+
+		cy.baseStr = cypherArray[0];
+		cy.keyStr = cypherArray[cypherArray.length - 1];
+
 		if (!cy.validateArgs(CorD, fn, key, cfn)) throw new Exception("Invalid arguments - <'C' or 'D'> <filename> <key> <array>");
 
 		String xx = "";
-
-		String[] cypherArray = cy.readFileCypher(cfn);
-		if (cypherArray == null || cypherArray.length < keyStr.length()) throw new Exception("Imported cypherArray less than keystr");
 
 		if (CorD.equals("C")){ 
 			xx = cy.readFileNTxt(fn);
